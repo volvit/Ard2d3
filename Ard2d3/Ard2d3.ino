@@ -17,10 +17,11 @@ OneWire  ds(10);  // on pin 10 (a 4.7K resistor is necessary)
 #define TSensorPin 3 // пин для датчика касания 
 #define LightPin 4 // пин для лампочки
 int swithLampPin = 2; // пин для включения прожектора
+bool PompIsOn = false; // переменая "горит ли лампочка и вода"
 bool LampIsOn = false; // переменая "включен ли свет?"
 
 SmartDelay LampDelay(2000000UL); // Пауза для кнопки лампы
-
+SmartDelay PompDelay(3000000UL); // Пауза для помпы и лампочки
 
 void setup(void) {
 	Serial.begin(9600);
@@ -148,15 +149,29 @@ void loop(void) {
 	else if (inputVoltage != 0.00 && inputVoltage > 0.00) {
 		digitalWrite(6, HIGH); // Выключаем реле (насос) если ток (вода) есть
 	}
-	float dist_cm = 10; // ultrasonic.Ranging(CM); // дистанция в см
+	float dist_cm = ultrasonic.distanceRead(CM); // дистанция в см
 	Serial.println(dist_cm);// выводим дистанцию в порт
+
+	if (dist_cm < 40) {
+		PompIsOn = true;
+		PompDelay.Wait();
+		digitalWrite(LightPin, LOW);
+	}
+	if (PompIsOn && PompDelay.Now()) {
+		PompIsOn = false;
+		digitalWrite(LightPin, HIGH);
+	}
+
+
+
+	/*
 	if (dist_cm < 35) {
 		digitalWrite(7, LOW); // Включаем реле (насос) если датчик показывает < 30см
-		delay(/*3000*/0);
+		delay(3000);
 
 	}
 	if (dist_cm > 35) {
 		digitalWrite(7, HIGH); // Выключаем реле (насос) если датчик показывает >  30см
 	}
-
+	*/
 }
